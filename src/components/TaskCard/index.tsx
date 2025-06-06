@@ -89,12 +89,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
         const offset = lastOffset.current;
         let newValue = offset + dx;
 
-        // Limitar el movimiento hacia la izquierda y derecha
         if (newValue > 0) {
-          newValue = newValue * 0.2; // Resistencia al deslizar hacia la derecha
+          newValue = newValue * 0.2; 
         } else if (newValue < -ACTION_WIDTH) {
           const overflow = Math.abs(newValue + ACTION_WIDTH);
-          newValue = -ACTION_WIDTH - overflow * 0.2; // Resistencia al deslizar demasiado
+          newValue = -ACTION_WIDTH - overflow * 0.2; 
         }
 
         pan.setValue(newValue - offset);
@@ -107,7 +106,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         const { dx, vx } = gestureState;
         const velocity = Math.abs(vx);
 
-        // Decidir si abrir o cerrar basado en la posición y velocidad
         const shouldOpen =
           dx < -SWIPE_THRESHOLD ||
           (velocity > 0.5 && dx < 0) ||
