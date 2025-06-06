@@ -24,17 +24,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(userData);
   };
 
-  const logout = async () => {
-    try {
-      await AsyncStorage.removeItem('@user');
-      setIsAuthenticated(false);
-      setUser(null);
-    } catch (error) {
-      console.error('Error removing user:', error);
-    }
+  const logout = () => {
+    setIsAuthenticated(false);
+    setUser(null);
   };
 
-  // Cargar usuario al iniciar la app si existe
   useEffect(() => {
     checkStoredUser();
   }, []);
@@ -44,8 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedUser = await AsyncStorage.getItem('@user');
       if (storedUser) {
         const userData = JSON.parse(storedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
       }
     } catch (error) {
       console.error('Error loading stored user:', error);

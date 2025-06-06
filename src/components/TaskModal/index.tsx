@@ -3,6 +3,7 @@ import { Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
 import { useAuth } from '../../context/AuthContext';
+import { TaskData } from '../../context/TaskContext';
 import Input from '../Input';
 import Button from '../Button';
 import {
@@ -23,16 +24,6 @@ import {
   ButtonContainer,
   SmallButton,
 } from './styles';
-
-interface TaskData {
-  id: string;
-  title: string;
-  description: string;
-  days: string[];
-  startTime: string;
-  endTime: string;
-  user: string; 
-}
 
 interface TaskModalProps {
   visible: boolean;
@@ -62,7 +53,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const theme = useTheme();
   const { user } = useAuth();
   
-
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -72,12 +62,14 @@ const TaskModal: React.FC<TaskModalProps> = ({
   useEffect(() => {
     if (visible) {
       if (isEditMode && editTask) {
-        setTitle(editTask.title);
-        setDescription(editTask.description);
-        setSelectedDays(editTask.days);
-        setStartTime(editTask.startTime);
-        setEndTime(editTask.endTime);
-      } else if (!isEditMode) {
+        console.log('Loading edit task:', editTask); 
+        setTitle(editTask.title || '');
+        setDescription(editTask.description || '');
+        setSelectedDays(editTask.days ? [...editTask.days] : []);
+        setStartTime(editTask.startTime || '09:00');
+        setEndTime(editTask.endTime || '17:00');
+      } else {
+        console.log('Clearing form for new task');
         setTitle('');
         setDescription('');
         setSelectedDays([]);
@@ -85,7 +77,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         setEndTime('17:00');
       }
     }
-  }, [visible, isEditMode, editTask]);
+  }, [visible, isEditMode, editTask?.id]); 
 
   const resetForm = useCallback(() => {
     setTitle('');
@@ -152,8 +144,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
     };
 
     onCreateTask(taskData);
-    onClose();
-  }, [title, description, selectedDays, startTime, endTime, user, onCreateTask, onClose, isEditMode, editTask]);
+  }, [title, description, selectedDays, startTime, endTime, user, onCreateTask, isEditMode, editTask, validateForm]);
 
   const formatTimeInput = (text: string, setter: (value: string) => void) => {
     let cleaned = text.replace(/[^\d:]/g, '');
@@ -271,7 +262,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <Button text="Cancelar" onPress={handleClose} />
               </SmallButton>
               <SmallButton>
-                <Button text={isEditMode ? 'Guardar Cambios' : 'Crear Tarea'} onPress={handleCreateTask} />
+                <Button text={isEditMode ? 'Guardar' : 'Crear Tarea'} onPress={handleCreateTask} />
               </SmallButton>
             </ButtonContainer>
           </ModalContent>

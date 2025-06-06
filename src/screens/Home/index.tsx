@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useTask, TaskData } from '../../context/TaskContext';
 import TaskModal from '../../components/TaskModal';
 import TaskView from '../../components/TaskView';
 import TaskCard from '../../components/TaskCard';
@@ -13,32 +14,23 @@ import {
   FABIcon,
 } from './styles';
 
-interface TaskData {
-  id: string;
-  title: string;
-  description: string;
-  days: string[];
-  startTime: string;
-  endTime: string;
-  user: string;
-}
-
 const HomeScreen = () => {
   const { user } = useAuth();
+  const { getUserTasks, addTask, updateTask, isLoading } = useTask();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskData | null>(null);
-  const [tasks, setTasks] = useState<TaskData[]>([]);
 
-  const handleTaskCreated = (task: TaskData) => {
+  const userTasks = user ? getUserTasks(user.username) : [];
+
+  const handleTaskCreated = async (task: TaskData) => {
     if (isEditMode && selectedTask) {
-      setTasks(prevTasks => 
-        prevTasks.map(t => t.id === selectedTask.id ? task : t)
-      );
+      await updateTask(task);
     } else {
-      setTasks(prevTasks => [...prevTasks, task]);
+      await addTask(task);
     }
+    setIsModalVisible(false);
     setIsEditMode(false);
     setSelectedTask(null);
   };
@@ -49,31 +41,35 @@ const HomeScreen = () => {
   };
 
   const handleEditTask = (task: TaskData) => {
-    setSelectedTask(task);
-    setIsEditMode(true);
-    setIsModalVisible(true);
+    console.log('Editing task:', task); 
+    setIsViewModalVisible(false);
+    
+    
+    setTimeout(() => {
+      setSelectedTask(task);
+      setIsEditMode(true);
+      setIsModalVisible(true);
+    }, 150); 
   };
 
   const handleCloseModal = () => {
     setIsModalVisible(false);
-    setTimeout(() => {
-      setIsEditMode(false);
-      setSelectedTask(null);
-    }, 300); 
+    setIsEditMode(false);
+    setSelectedTask(null);
   };
 
   const handleCloseViewModal = () => {
     setIsViewModalVisible(false);
-    setSelectedTask(null);
+    setTimeout(() => {
+      setSelectedTask(null);
+    }, 100);
   };
 
   const handleOpenNewTask = () => {
-    setIsEditMode(false);
     setSelectedTask(null);
+    setIsEditMode(false);
     setIsModalVisible(true);
   };
-
-  const userTasks = tasks.filter(task => task.user === user?.username);
 
   const renderTask = ({ item }: { item: TaskData }) => (
     <TaskCard
@@ -95,6 +91,20 @@ const HomeScreen = () => {
     </EmptyContainer>
   );
 
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <Container>
+          <EmptyContainer>
+            <ActivityIndicator size="large" color="#1e90ff" />
+            <EmptyText>Cargando tareas...</EmptyText>
+          </EmptyContainer>
+        </Container>
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
@@ -106,7 +116,7 @@ const HomeScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ 
             flexGrow: 1,
-            paddingBottom: 80 
+            paddingBottom: 80
           }}
           ListEmptyComponent={renderEmptyState}
         />

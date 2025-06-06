@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
+import { TaskData } from '../../context/TaskContext';
 import Button from '../Button';
 import {
   ModalOverlay,
@@ -21,16 +22,6 @@ import {
   ButtonContainer,
   ActionButton,
 } from './styles';
-
-interface TaskData {
-  id: string;
-  title: string;
-  description: string;
-  days: string[];
-  startTime: string;
-  endTime: string;
-  user: string;
-}
 
 interface TaskViewProps {
   visible: boolean;
@@ -105,11 +96,6 @@ const TaskView: React.FC<TaskViewProps> = ({ visible, task, onClose, onEdit }) =
                 <Ionicons name="time-outline" size={20} color={theme.primary} />
                 <TimeText>{task.startTime} - {task.endTime}</TimeText>
               </TimeContainer>
-            </Section>
-
-            <Section>
-              <SectionTitle>Creado por</SectionTitle>
-              <SectionContent>{task.user}</SectionContent>
             </Section>
           </ScrollContainer>
 
