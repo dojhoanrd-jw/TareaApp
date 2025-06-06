@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Container, Title, Button, ButtonText } from './styles';
+import { Container, Title } from './styles';
+import Button from '../../components/Button';
 
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
+  Home: undefined;
 };
 
 export default function WelcomeScreen() {
@@ -15,13 +17,8 @@ export default function WelcomeScreen() {
     <Container>
       <Title>Bienvenido a TareaApp</Title>
 
-      <Button onPress={() => navigation.navigate('Login')}>
-        <ButtonText>Iniciar Sesión</ButtonText>
-      </Button>
-
-      <Button onPress={() => navigation.navigate('Register')}>
-        <ButtonText>Registrarse</ButtonText>
-      </Button>
+      <Button text="Iniciar Sesión" onPress={() => navigation.navigate('Login')} />
+      <Button text="Registrarse" onPress={() => navigation.navigate('Register')} />
     </Container>
   );
 }

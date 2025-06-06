@@ -5,6 +5,7 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAuth } from '../../context/AuthContext';
 import { Container, Title, LinkText } from './styles';
 
 type RootStackParamList = {
@@ -14,6 +15,7 @@ type RootStackParamList = {
 
 export default function LoginScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -26,6 +28,7 @@ export default function LoginScreen() {
 
       const parsed = JSON.parse(storedUser);
       if (parsed.username === username && parsed.password === password) {
+        login(parsed);
         navigation.navigate('Home');
       } else {
         Alert.alert('Error', 'Credenciales incorrectas');
