@@ -7,6 +7,7 @@ import TaskView from '../../components/TaskView';
 import TaskCard from '../../components/TaskCard';
 import Header from '../../components/Header';
 import FilterTasks, { FilterType } from '../../components/FilterTasks';
+import TasksHeader, { DayFilter } from '../../components/TasksHeader';
 import {
   Container,
   EmptyContainer,
@@ -23,15 +24,24 @@ const HomeScreen = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskData | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [selectedDay, setSelectedDay] = useState<DayFilter>('all');
 
   const userTasks = user ? getUserTasks(user.username) : [];
 
-  // Filter tasks based on active filter
+  // Filter tasks based on active filter and selected day
   const filteredTasks = userTasks.filter(task => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'completed') return task.status === 'completed';
-    if (activeFilter === 'in-progress') return task.status === 'in-progress';
-    return true;
+    // Filter by status
+    const statusMatch = 
+      activeFilter === 'all' || 
+      (activeFilter === 'completed' && task.status === 'completed') ||
+      (activeFilter === 'in-progress' && task.status === 'in-progress');
+
+    // Filter by day
+    const dayMatch = 
+      selectedDay === 'all' || 
+      task.days.includes(selectedDay);
+
+    return statusMatch && dayMatch;
   });
 
   // Count tasks by status
@@ -176,13 +186,15 @@ const HomeScreen = () => {
     <EmptyContainer>
       <EmptyText>
         {activeFilter === 'all' 
-          ? 'No tienes tareas creadas'
+          ? selectedDay === 'all' 
+            ? 'No tienes tareas creadas'
+            : `No tienes tareas para ${DAYS_OPTIONS.find(d => d.key === selectedDay)?.label}`
           : activeFilter === 'completed'
           ? 'No tienes tareas completadas'
           : 'No tienes tareas en progreso'
         }
       </EmptyText>
-      {activeFilter === 'all' && (
+      {activeFilter === 'all' && selectedDay === 'all' && (
         <EmptyText>Presiona el botón + para crear tu primera tarea</EmptyText>
       )}
     </EmptyContainer>
@@ -205,6 +217,11 @@ const HomeScreen = () => {
   return (
     <>
       <Header />
+      
+      <TasksHeader
+        selectedDay={selectedDay}
+        onDayChange={setSelectedDay}
+      />
       
       <FilterTasks
         activeFilter={activeFilter}
@@ -249,5 +266,15 @@ const HomeScreen = () => {
     </>
   );
 };
+
+const DAYS_OPTIONS = [
+  { key: 'monday', label: 'Lunes' },
+  { key: 'tuesday', label: 'Martes' },
+  { key: 'wednesday', label: 'Miércoles' },
+  { key: 'thursday', label: 'Jueves' },
+  { key: 'friday', label: 'Viernes' },
+  { key: 'saturday', label: 'Sábado' },
+  { key: 'sunday', label: 'Domingo' },
+];
 
 export default HomeScreen;

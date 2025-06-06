@@ -58,7 +58,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
-  const [status, setStatus] = useState<'completed' | 'in-progress' | undefined>(undefined);
 
   useEffect(() => {
     if (visible) {
@@ -69,7 +68,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
         setSelectedDays(editTask.days ? [...editTask.days] : []);
         setStartTime(editTask.startTime || '09:00');
         setEndTime(editTask.endTime || '17:00');
-        setStatus(editTask.status);
       } else {
         console.log('Clearing form for new task');
         setTitle('');
@@ -77,7 +75,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
         setSelectedDays([]);
         setStartTime('09:00');
         setEndTime('17:00');
-        setStatus(undefined);
       }
     }
   }, [visible, isEditMode, editTask?.id]);
@@ -144,11 +141,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
       startTime: startTime,
       endTime: endTime,
       user: user.username,
-      status: status,
+      status: isEditMode && editTask ? editTask.status : undefined,
     };
 
     onCreateTask(taskData);
-  }, [title, description, selectedDays, startTime, endTime, status, user, onCreateTask, isEditMode, editTask, validateForm]);
+  }, [title, description, selectedDays, startTime, endTime, user, onCreateTask, isEditMode, editTask, validateForm]);
 
   const formatTimeInput = (text: string, setter: (value: string) => void) => {
     let cleaned = text.replace(/[^\d:]/g, '');
@@ -229,30 +226,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
                       </DayText>
                     </DayButton>
                   ))}
-                </DaysContainer>
-              </FormSection>
-
-              <FormSection>
-                <SectionTitle>Estado de la tarea</SectionTitle>
-                <DaysContainer>
-                  <DayButton
-                    isSelected={status === undefined}
-                    onPress={() => setStatus(undefined)}
-                  >
-                    <DayText isSelected={status === undefined}>Sin estado</DayText>
-                  </DayButton>
-                  <DayButton
-                    isSelected={status === 'in-progress'}
-                    onPress={() => setStatus('in-progress')}
-                  >
-                    <DayText isSelected={status === 'in-progress'}>En progreso</DayText>
-                  </DayButton>
-                  <DayButton
-                    isSelected={status === 'completed'}
-                    onPress={() => setStatus('completed')}
-                  >
-                    <DayText isSelected={status === 'completed'}>Completada</DayText>
-                  </DayButton>
                 </DaysContainer>
               </FormSection>
 
