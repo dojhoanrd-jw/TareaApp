@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Modal, Alert, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
 import { useAuth } from '../../context/AuthContext';
 import { TaskData } from '../../context/TaskContext';
+import { useModalAnimation } from '../../hooks/useModalAnimation';
 import Input from '../Input';
 import Button from '../Button';
 import {
@@ -59,6 +60,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
 
+  const { getBackdropStyle, getContentStyle, animateOut } = useModalAnimation({
+    visible,
+    animationType: 'slide',
+    duration: 300,
+  });
+
   useEffect(() => {
     if (visible) {
       if (isEditMode && editTask) {
@@ -88,8 +95,10 @@ const TaskModal: React.FC<TaskModalProps> = ({
   }, []);
 
   const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
+    animateOut(() => {
+      onClose();
+    });
+  }, [onClose, animateOut]);
 
   const toggleDay = useCallback((dayKey: string) => {
     setSelectedDays(prev => 
@@ -165,15 +174,44 @@ const TaskModal: React.FC<TaskModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={handleClose}
+      presentationStyle="overFullScreen"
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ModalOverlay>
-          <ModalContent>
+        <Animated.View
+          style={[
+            {
+              flex: 1,
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            },
+            getBackdropStyle(),
+          ]}
+        >
+          <Animated.View
+            style={[
+              {
+                width: '100%',
+                maxHeight: '90%',
+                backgroundColor: theme.background,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                padding: 10,
+                paddingHorizontal: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 10,
+              },
+              getContentStyle(),
+            ]}
+          >
             <ModalHeader>
               <ModalTitle>{isEditMode ? 'Editar Tarea' : 'Nueva Tarea'}</ModalTitle>
               <CloseButton onPress={handleClose}>
@@ -266,8 +304,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <Button text={isEditMode ? 'Guardar' : 'Crear Tarea'} onPress={handleCreateTask} />
               </SmallButton>
             </ButtonContainer>
-          </ModalContent>
-        </ModalOverlay>
+          </Animated.View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );

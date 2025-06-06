@@ -10,10 +10,17 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const Header = () => {
   const navigation = useNavigation<NavigationProp>();
 
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
+  };
+
   return (
     <Container>
       <Title>TareaApp</Title>
-      <ProfileButton onPress={() => navigation.navigate('Profile')}>
+      <ProfileButton 
+        onPress={handleProfilePress}
+        activeOpacity={0.7}
+      >
         <Ionicons name="person-circle-outline" size={28} color="#fff" />
       </ProfileButton>
     </Container>

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Modal } from 'react-native';
+import { Modal, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
 import { TaskData } from '../../context/TaskContext';
+import { useModalAnimation } from '../../hooks/useModalAnimation';
 import Button from '../Button';
 import {
   ModalOverlay,
@@ -43,6 +44,12 @@ const DAYS_NAMES = {
 const TaskView: React.FC<TaskViewProps> = ({ visible, task, onClose, onEdit }) => {
   const theme = useTheme();
 
+  const { getBackdropStyle, getContentStyle, animateOut } = useModalAnimation({
+    visible,
+    animationType: 'slide',
+    duration: 300,
+  });
+
   if (!task) return null;
 
   const handleEdit = () => {
@@ -50,15 +57,48 @@ const TaskView: React.FC<TaskViewProps> = ({ visible, task, onClose, onEdit }) =
     onClose();
   };
 
+  const handleClose = () => {
+    animateOut(() => {
+      onClose();
+    });
+  };
+
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
-      onRequestClose={onClose}
+      animationType="none"
+      onRequestClose={handleClose}
     >
-      <ModalOverlay>
-        <ModalContent>
+      <Animated.View
+        style={[
+          {
+            flex: 1,
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          },
+          getBackdropStyle(),
+        ]}
+      >
+        <Animated.View
+          style={[
+            {
+              width: '100%',
+              maxHeight: '85%',
+              backgroundColor: theme.background,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 10,
+            },
+            getContentStyle(),
+          ]}
+        >
           <ModalHeader>
             <ModalTitle>Detalles de Tarea</ModalTitle>
             <CloseButton onPress={onClose}>
@@ -107,8 +147,8 @@ const TaskView: React.FC<TaskViewProps> = ({ visible, task, onClose, onEdit }) =
               <Button text="Editar Tarea" onPress={handleEdit} />
             </ActionButton>
           </ButtonContainer>
-        </ModalContent>
-      </ModalOverlay>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 };

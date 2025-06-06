@@ -20,12 +20,15 @@ const ProfileScreen = () => {
   const { isDarkMode, toggleTheme } = useThemeContext();
 
   const handleGoBack = () => {
-    navigation.navigate('Home');
+    navigation.goBack();
   };
 
   const handleLogout = () => {
     logout();
-    navigation.navigate('Welcome');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Welcome' }],
+    });
   };
 
   const handleThemeToggle = (value: boolean) => {
