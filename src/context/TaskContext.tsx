@@ -9,12 +9,14 @@ export interface TaskData {
   startTime: string;
   endTime: string;
   user: string;
+  status?: 'completed' | 'in-progress';
 }
 
 interface TaskContextProps {
   tasks: TaskData[];
   addTask: (task: TaskData) => Promise<void>;
   updateTask: (task: TaskData) => Promise<void>;
+  updateTaskStatus: (taskId: string, status: 'completed' | 'in-progress' | undefined) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   getUserTasks: (username: string) => TaskData[];
   isLoading: boolean;
@@ -68,6 +70,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     await saveTasks(newTasks);
   };
 
+  const updateTaskStatus = async (taskId: string, status: 'completed' | 'in-progress' | undefined) => {
+    const newTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, status } : task
+    );
+    await saveTasks(newTasks);
+  };
+
   const deleteTask = async (taskId: string) => {
     const newTasks = tasks.filter(task => task.id !== taskId);
     await saveTasks(newTasks);
@@ -82,6 +91,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       tasks,
       addTask,
       updateTask,
+      updateTaskStatus,
       deleteTask,
       getUserTasks,
       isLoading,

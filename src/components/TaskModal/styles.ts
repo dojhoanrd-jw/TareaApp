@@ -55,11 +55,12 @@ export const DaysContainer = styled.View`
 `;
 
 export const DayButton = styled.TouchableOpacity<{ isSelected: boolean }>`
-  width: 40px;
+  min-width: 40px;
   height: 40px;
   border-radius: 20px;
   justify-content: center;
   align-items: center;
+  padding: 0 12px;
   background-color: ${({ theme, isSelected }) => 
     isSelected ? theme.primary : theme.background};
   border: 2px solid ${({ theme, isSelected }) => 
