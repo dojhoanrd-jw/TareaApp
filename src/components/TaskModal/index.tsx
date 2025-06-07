@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Modal, Alert, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import { Modal, Alert, KeyboardAvoidingView, Platform, Animated, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
 import { useAuth } from '../../context/AuthContext';
@@ -59,6 +59,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const { getBackdropStyle, getContentStyle, animateOut } = useModalAnimation({
     visible,
@@ -75,6 +76,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         setSelectedDays(editTask.days ? [...editTask.days] : []);
         setStartTime(editTask.startTime || '09:00');
         setEndTime(editTask.endTime || '17:00');
+        setNotificationsEnabled(editTask.notificationsEnabled !== false);
       } else {
         console.log('Clearing form for new task');
         setTitle('');
@@ -82,6 +84,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         setSelectedDays([]);
         setStartTime('09:00');
         setEndTime('17:00');
+        setNotificationsEnabled(true);
       }
     }
   }, [visible, isEditMode, editTask?.id]);
@@ -151,10 +154,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
       endTime: endTime,
       user: user.username,
       status: isEditMode && editTask ? editTask.status : undefined,
+      notificationsEnabled,
     };
 
     onCreateTask(taskData);
-  }, [title, description, selectedDays, startTime, endTime, user, onCreateTask, isEditMode, editTask, validateForm]);
+  }, [title, description, selectedDays, startTime, endTime, user, onCreateTask, isEditMode, editTask, validateForm, notificationsEnabled]);
 
   const formatTimeInput = (text: string, setter: (value: string) => void) => {
     let cleaned = text.replace(/[^\d:]/g, '');
@@ -292,6 +296,21 @@ const TaskModal: React.FC<TaskModalProps> = ({
                       maxLength={5}
                     />
                   </TimeSection>
+                </TimeContainer>
+              </FormSection>
+
+              <FormSection>
+                <SectionTitle>Configuración</SectionTitle>
+                <TimeContainer>
+                  <SectionTitle style={{ flex: 1, marginBottom: 0 }}>
+                    Notificaciones
+                  </SectionTitle>
+                  <Switch
+                    value={notificationsEnabled}
+                    onValueChange={setNotificationsEnabled}
+                    trackColor={{ false: theme.border, true: theme.primary }}
+                    thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
+                  />
                 </TimeContainer>
               </FormSection>
             </ScrollContainer>

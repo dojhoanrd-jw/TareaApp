@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FlatList, ActivityIndicator, Alert } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useTask, TaskData } from '../../context/TaskContext';
@@ -8,6 +8,7 @@ import TaskCard from '../../components/TaskCard';
 import Header from '../../components/Header';
 import FilterTasks, { FilterType } from '../../components/FilterTasks';
 import TasksHeader, { DayFilter } from '../../components/TasksHeader';
+import NotificationService from '../../services/NotificationService';
 import {
   Container,
   EmptyContainer,
@@ -18,7 +19,15 @@ import {
 
 const HomeScreen = () => {
   const { user } = useAuth();
-  const { getUserTasks, addTask, updateTask, updateTaskStatus, deleteTask, isLoading } = useTask();
+  const { 
+    getUserTasks, 
+    addTask, 
+    updateTask, 
+    updateTaskStatus, 
+    deleteTask, 
+    toggleTaskNotifications,
+    isLoading 
+  } = useTask();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -165,6 +174,20 @@ const HomeScreen = () => {
     }
   };
 
+  const handleToggleNotifications = async (taskId: string) => {
+    try {
+      await toggleTaskNotifications(taskId);
+      const task = userTasks.find(t => t.id === taskId);
+      const newStatus = !task?.notificationsEnabled;
+      Alert.alert(
+        'Notificaciones',
+        `Notificaciones ${newStatus ? 'activadas' : 'desactivadas'} para "${task?.title}"`
+      );
+    } catch (error) {
+      Alert.alert('Error', 'No se pudieron actualizar las notificaciones');
+    }
+  };
+
   const renderTask = ({ item }: { item: TaskData }) => (
     <TaskCard
       id={item.id}
@@ -175,10 +198,12 @@ const HomeScreen = () => {
       endTime={item.endTime}
       user={item.user}
       status={item.status}
+      notificationsEnabled={item.notificationsEnabled}
       onPress={() => handleTaskPress(item)}
       onDelete={handleDeleteTask}
       onComplete={handleCompleteTask}
       onToggleStatus={handleToggleTaskStatus}
+      onToggleNotifications={handleToggleNotifications}
     />
   );
 
@@ -199,6 +224,34 @@ const HomeScreen = () => {
       )}
     </EmptyContainer>
   );
+
+  useEffect(() => {
+    // Initialize notification listeners
+    const responseSubscription = NotificationService.addNotificationResponseListener(
+      (response) => {
+        const data = response.notification.request.content.data as any;
+        if (data?.taskId) {
+          // Handle notification tap - could navigate to task or show alert
+          Alert.alert(
+            'Recordatorio de tarea',
+            `${data.type === 'start' ? 'Tiempo de empezar' : 'Tiempo de finalizar'}: ${data.title}`
+          );
+        }
+      }
+    );
+
+    const receivedSubscription = NotificationService.addNotificationReceivedListener(
+      (notification) => {
+        // Handle foreground notifications
+        console.log('Notification received:', notification);
+      }
+    );
+
+    return () => {
+      responseSubscription.remove();
+      receivedSubscription.remove();
+    };
+  }, []);
 
   if (isLoading) {
     return (

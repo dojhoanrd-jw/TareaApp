@@ -29,10 +29,12 @@ interface TaskCardProps {
   endTime: string;
   user: string;
   status?: 'completed' | 'in-progress';
+  notificationsEnabled?: boolean;
   onPress?: () => void;
   onDelete?: (id: string) => void;
   onComplete?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
+  onToggleNotifications?: (id: string) => void;
 }
 
 const DAYS_MAP = {
@@ -57,10 +59,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
   endTime,
   user,
   status,
+  notificationsEnabled = true,
   onPress,
   onDelete,
   onComplete,
   onToggleStatus,
+  onToggleNotifications,
 }) => {
   const theme = useTheme();
   const pan = useRef(new Animated.Value(0)).current;
@@ -159,9 +163,28 @@ const TaskCard: React.FC<TaskCardProps> = ({
     resetPosition();
   };
 
+  const handleToggleNotifications = () => {
+    onToggleNotifications?.(id);
+    resetPosition();
+  };
+
   return (
     <CardWrapper>
       <ActionsContainer>
+        <ActionButton
+          backgroundColor={notificationsEnabled ? '#FF9800' : '#4CAF50'}
+          onPress={handleToggleNotifications}
+        >
+          <Ionicons
+            name={notificationsEnabled ? 'notifications-off' : 'notifications'}
+            size={18}
+            color="#fff"
+          />
+          <ActionText>
+            {notificationsEnabled ? 'Silenciar' : 'Activar'}
+          </ActionText>
+        </ActionButton>
+
         <ActionButton
           backgroundColor={status === 'in-progress' ? '#4CAF50' : '#FF9800'}
           onPress={handleToggleStatus}
@@ -208,7 +231,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
           activeOpacity={0.7}
           onLongPress={resetPosition}
         >
-          <TaskTitle>{title}</TaskTitle>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <TaskTitle style={{ flex: 1 }}>{title}</TaskTitle>
+            {notificationsEnabled && (
+              <Ionicons 
+                name="notifications" 
+                size={16} 
+                color={theme.primary} 
+                style={{ marginLeft: 8 }}
+              />
+            )}
+          </View>
 
           {description && (
             <TaskDescription>{description}</TaskDescription>

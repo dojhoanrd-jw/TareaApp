@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NotificationService from '../services/NotificationService';
 
 export interface TaskData {
   id: string;
@@ -10,6 +11,7 @@ export interface TaskData {
   endTime: string;
   user: string;
   status?: 'completed' | 'in-progress';
+  notificationsEnabled?: boolean;
 }
 
 interface TaskContextProps {
@@ -20,6 +22,7 @@ interface TaskContextProps {
   deleteTask: (taskId: string) => Promise<void>;
   getUserTasks: (username: string) => TaskData[];
   isLoading: boolean;
+  toggleTaskNotifications: (taskId: string) => Promise<void>;
 }
 
 const TaskContext = createContext<TaskContextProps | undefined>(undefined);
@@ -33,7 +36,16 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   // Cargar tareas al iniciar
   useEffect(() => {
     loadTasks();
+    initializeNotifications();
   }, []);
+
+  const initializeNotifications = async () => {
+    try {
+      await NotificationService.requestPermissions();
+    } catch (error) {
+      console.error('Error initializing notifications:', error);
+    }
+  };
 
   const loadTasks = async () => {
     try {
@@ -58,9 +70,27 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const scheduleTaskNotifications = async (task: TaskData) => {
+    if (task.notificationsEnabled !== false) { // Default to enabled
+      try {
+        await NotificationService.scheduleTaskNotifications(
+          task.id,
+          task.title,
+          task.days,
+          task.startTime,
+          task.endTime
+        );
+      } catch (error) {
+        console.error('Error scheduling notifications for task:', task.title, error);
+      }
+    }
+  };
+
   const addTask = async (task: TaskData) => {
-    const newTasks = [...tasks, task];
+    const taskWithNotifications = { ...task, notificationsEnabled: true };
+    const newTasks = [...tasks, taskWithNotifications];
     await saveTasks(newTasks);
+    await scheduleTaskNotifications(taskWithNotifications);
   };
 
   const updateTask = async (updatedTask: TaskData) => {
@@ -68,6 +98,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       task.id === updatedTask.id ? updatedTask : task
     );
     await saveTasks(newTasks);
+    
+    // Reschedule notifications
+    await NotificationService.cancelTaskNotifications(updatedTask.id);
+    await scheduleTaskNotifications(updatedTask);
   };
 
   const updateTaskStatus = async (taskId: string, status: 'completed' | 'in-progress' | undefined) => {
@@ -78,8 +112,33 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteTask = async (taskId: string) => {
+    // Cancel notifications before deleting
+    await NotificationService.cancelTaskNotifications(taskId);
+    
     const newTasks = tasks.filter(task => task.id !== taskId);
     await saveTasks(newTasks);
+  };
+
+  const toggleTaskNotifications = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const updatedTask = { 
+      ...task, 
+      notificationsEnabled: !task.notificationsEnabled 
+    };
+
+    const newTasks = tasks.map(t => 
+      t.id === taskId ? updatedTask : t
+    );
+
+    await saveTasks(newTasks);
+
+    if (updatedTask.notificationsEnabled) {
+      await scheduleTaskNotifications(updatedTask);
+    } else {
+      await NotificationService.cancelTaskNotifications(taskId);
+    }
   };
 
   const getUserTasks = (username: string): TaskData[] => {
@@ -95,6 +154,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       deleteTask,
       getUserTasks,
       isLoading,
+      toggleTaskNotifications,
     }}>
       {children}
     </TaskContext.Provider>
