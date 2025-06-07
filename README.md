@@ -14,13 +14,15 @@ Una aplicación móvil de gestión de tareas construida con React Native y Expo,
 
 1. **Clonar el repositorio**
    ```bash
-   git clone <repository-url>
+   git clone /
    cd TareaApp
    ```
 
 2. **Instalar dependencias**
    ```bash
    npm install
+   # Si tienes problemas de conflictos entre paquetes 
+   npm install --legacy-peer-deps
    ```
 
 3. **Iniciar el servidor de desarrollo**
