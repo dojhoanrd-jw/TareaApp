@@ -1,5 +1,4 @@
 import { useSwipeGesture } from './useSwipeGesture';
-import { useTaskCardActions } from './useTaskCardActions';
 
 interface UseTaskCardProps {
   id: string;
@@ -10,31 +9,39 @@ interface UseTaskCardProps {
   onToggleNotifications?: (id: string) => void;
 }
 
-const SWIPE_THRESHOLD = 60;
-const ACTION_WIDTH = 156;
-
 export const useTaskCard = ({
   id,
   status,
-  notificationsEnabled = true,
+  notificationsEnabled,
   onDelete,
   onToggleStatus,
   onToggleNotifications,
 }: UseTaskCardProps) => {
   const { pan, panResponder, resetPosition } = useSwipeGesture({
-    actionWidth: ACTION_WIDTH,
-    swipeThreshold: SWIPE_THRESHOLD,
+    actionWidth: 156,
+    swipeThreshold: 50,
   });
 
-  const { actions } = useTaskCardActions({
-    taskId: id,
-    status,
-    notificationsEnabled,
-    onDelete,
-    onToggleStatus,
-    onToggleNotifications,
-    onActionComplete: () => resetPosition(),
-  });
+  const actions = [
+    {
+      backgroundColor: '#FF6B6B',
+      icon: 'trash',
+      text: 'Eliminar',
+      action: () => {
+        resetPosition();
+        onDelete?.(id);
+      },
+    },
+    {
+      backgroundColor: status === 'completed' ? '#4CAF50' : '#FF9800',
+      icon: status === 'completed' ? 'checkmark' : 'play',
+      text: status === 'completed' ? 'Hecho' : 'Progreso',
+      action: () => {
+        resetPosition();
+        onToggleStatus?.(id);
+      },
+    },
+  ];
 
   return {
     pan,
