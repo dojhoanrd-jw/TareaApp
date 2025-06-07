@@ -14,7 +14,7 @@ Una aplicación móvil de gestión de tareas construida con React Native y Expo,
 
 1. **Clonar el repositorio**
    ```bash
-   git clone /
+   git clone <Url del repositorio>
    cd TareaApp
    ```
 
