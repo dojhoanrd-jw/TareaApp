@@ -67,7 +67,7 @@ export const TaskDescription = styled.Text`
 
 export const TaskInfo = styled.View`
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
 `;
 
@@ -103,6 +103,7 @@ export const TimeText = styled.Text`
 export const DaysContainer = styled.View`
   flex-direction: row;
   gap: 4px;
+  flex-wrap: wrap;
 `;
 
 export const DayChip = styled.View`

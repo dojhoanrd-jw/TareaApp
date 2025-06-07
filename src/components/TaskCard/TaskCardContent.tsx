@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
 import {
   TaskTitle,
-  TaskDescription,
   TaskInfo,
   TimeContainer,
   TimeText,
@@ -35,6 +34,9 @@ const DAYS_MAP = {
   sunday: 'D',
 };
 
+// Order of days in the week
+const DAYS_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 const TaskCardContent: React.FC<TaskCardContentProps> = ({
   title,
   description,
@@ -45,6 +47,11 @@ const TaskCardContent: React.FC<TaskCardContentProps> = ({
   notificationsEnabled,
 }) => {
   const theme = useTheme();
+
+  // Sort days according to weekly order
+  const sortedDays = days.sort((a, b) => {
+    return DAYS_ORDER.indexOf(a) - DAYS_ORDER.indexOf(b);
+  });
 
   return (
     <>
@@ -60,32 +67,29 @@ const TaskCardContent: React.FC<TaskCardContentProps> = ({
         )}
       </View>
 
-      {description && (
-        <TaskDescription>{description}</TaskDescription>
-      )}
+      {/* Days moved below title */}
+      <DaysContainer style={{ marginBottom: 8 }}>
+        {sortedDays.map((day, index) => (
+          <DayChip key={index}>
+            <DayText>{DAYS_MAP[day as keyof typeof DAYS_MAP]}</DayText>
+          </DayChip>
+        ))}
+      </DaysContainer>
 
-      <TaskInfo>
+      <TaskInfo style={{ justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <TimeContainer>
           <Ionicons name="time-outline" size={16} color={theme.primary} />
           <TimeText>
             {startTime} - {endTime}
           </TimeText>
-          {status && (
-            <StatusBadge status={status}>
-              <StatusText>
-                {status === 'completed' ? 'Completada' : 'En progreso'}
-              </StatusText>
-            </StatusBadge>
-          )}
         </TimeContainer>
-
-        <DaysContainer>
-          {days.map((day, index) => (
-            <DayChip key={index}>
-              <DayText>{DAYS_MAP[day as keyof typeof DAYS_MAP]}</DayText>
-            </DayChip>
-          ))}
-        </DaysContainer>
+        {status && (
+          <StatusBadge status={status}>
+            <StatusText>
+              {status === 'completed' ? 'Completada' : 'En progreso'}
+            </StatusText>
+          </StatusBadge>
+        )}
       </TaskInfo>
     </>
   );
