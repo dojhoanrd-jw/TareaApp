@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Container, LogoContainer, LogoText, Title, LinkText } from './styles';
+import { useUserRegistration } from '../../hooks/useUserRegistration';
 
 type RootStackParamList = {
   Login: undefined;
@@ -14,30 +13,16 @@ type RootStackParamList = {
 
 export default function RegisterScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { registerUser, isLoading } = useUserRegistration();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleRegister = async () => {
-    if (!username || !password || !confirmPassword) {
-      return Alert.alert('Error', 'Todos los campos son obligatorios');
-    }
-
-    if (password !== confirmPassword) {
-      return Alert.alert('Error', 'Las contraseñas no coinciden');
-    }
-
-    const userData = { username, password };
-
-    try {
-      await AsyncStorage.setItem('@user', JSON.stringify(userData));
-      Alert.alert('Registro exitoso', 'Ahora puedes iniciar sesión');
+    await registerUser(username, password, confirmPassword, () => {
       navigation.navigate('Login');
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo guardar el usuario');
-      console.error(error);
-    }
+    });
   };
 
   return (
@@ -52,7 +37,11 @@ export default function RegisterScreen() {
       <Input placeholder="Contraseña" value={password} onChangeText={setPassword} secureTextEntry />
       <Input placeholder="Confirmar contraseña" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
 
-      <Button text="Registrarse" onPress={handleRegister} />
+      <Button 
+        text={isLoading ? "Registrando..." : "Registrarse"} 
+        onPress={handleRegister}
+        disabled={isLoading}
+      />
 
       <LinkText onPress={() => navigation.navigate('Login')}>
         ¿Ya tienes cuenta? Inicia sesión

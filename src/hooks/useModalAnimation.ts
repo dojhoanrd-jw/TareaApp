@@ -129,7 +129,7 @@ export const useModalAnimation = ({
             {
               translateY: slideAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [500, 0],
+                outputRange: [600, 0],
               }),
             },
           ],

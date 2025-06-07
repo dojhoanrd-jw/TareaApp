@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { Container, LogoContainer, LogoText, Title, LinkText } from './styles';
+import { useUserLogin } from '../../hooks/useUserLogin';
 
 type RootStackParamList = {
   Home: undefined;
@@ -16,27 +15,15 @@ type RootStackParamList = {
 export default function LoginScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { login } = useAuth();
+  const { loginUser, isLoading } = useUserLogin();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    try {
-      const storedUser = await AsyncStorage.getItem('@user');
-      if (!storedUser) {
-        return Alert.alert('Error', 'No hay usuario registrado');
-      }
-
-      const parsed = JSON.parse(storedUser);
-      if (parsed.username === username && parsed.password === password) {
-        login(parsed);
-        navigation.navigate('Home');
-      } else {
-        Alert.alert('Error', 'Credenciales incorrectas');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Hubo un problema al iniciar sesión');
-      console.error(error);
-    }
+    await loginUser(username, password, (userData) => {
+      login(userData);
+      navigation.navigate('Home');
+    });
   };
 
   return (
@@ -48,7 +35,11 @@ export default function LoginScreen() {
       <Title>Iniciar Sesión</Title>
       <Input placeholder="Usuario" value={username} onChangeText={setUsername} />
       <Input placeholder="Contraseña" value={password} onChangeText={setPassword} secureTextEntry />
-      <Button text="Entrar" onPress={handleLogin} />
+      <Button 
+        text={isLoading ? "Entrando..." : "Entrar"} 
+        onPress={handleLogin}
+        disabled={isLoading}
+      />
 
       <LinkText onPress={() => navigation.navigate('Register')}>
         ¿No tienes cuenta? Regístrate

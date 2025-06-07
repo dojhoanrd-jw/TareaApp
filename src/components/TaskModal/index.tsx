@@ -1,11 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Modal, Alert, KeyboardAvoidingView, Platform, Animated, Switch } from 'react-native';
+import React, { useCallback } from 'react';
+import { Modal, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
 import { useAuth } from '../../context/AuthContext';
 import { TaskData } from '../../context/TaskContext';
 import { useModalAnimation } from '../../hooks/useModalAnimation';
-import Input from '../Input';
+import { useTaskForm } from '../../hooks/useTaskForm';
+import TaskForm from './components/TaskForm';
 import Button from '../Button';
 import {
   ModalOverlay,
@@ -14,14 +15,6 @@ import {
   ModalTitle,
   CloseButton,
   ScrollContainer,
-  FormSection,
-  SectionTitle,
-  DaysContainer,
-  DayButton,
-  DayText,
-  TimeContainer,
-  TimeSection,
-  TimeInput,
   ButtonContainer,
   SmallButton,
 } from './styles';
@@ -34,16 +27,6 @@ interface TaskModalProps {
   isEditMode?: boolean;
 }
 
-const DAYS_OF_WEEK = [
-  { key: 'monday', label: 'L' },
-  { key: 'tuesday', label: 'M' },
-  { key: 'wednesday', label: 'M' },
-  { key: 'thursday', label: 'J' },
-  { key: 'friday', label: 'V' },
-  { key: 'saturday', label: 'S' },
-  { key: 'sunday', label: 'D' },
-];
-
 const TaskModal: React.FC<TaskModalProps> = ({ 
   visible, 
   onClose, 
@@ -53,13 +36,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
 }) => {
   const theme = useTheme();
   const { user } = useAuth();
-  
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('17:00');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const { getBackdropStyle, getContentStyle, animateOut } = useModalAnimation({
     visible,
@@ -67,112 +43,33 @@ const TaskModal: React.FC<TaskModalProps> = ({
     duration: 300,
   });
 
-  useEffect(() => {
-    if (visible) {
-      if (isEditMode && editTask) {
-        console.log('Loading edit task:', editTask); 
-        setTitle(editTask.title || '');
-        setDescription(editTask.description || '');
-        setSelectedDays(editTask.days ? [...editTask.days] : []);
-        setStartTime(editTask.startTime || '09:00');
-        setEndTime(editTask.endTime || '17:00');
-        setNotificationsEnabled(editTask.notificationsEnabled !== false);
-      } else {
-        console.log('Clearing form for new task');
-        setTitle('');
-        setDescription('');
-        setSelectedDays([]);
-        setStartTime('09:00');
-        setEndTime('17:00');
-        setNotificationsEnabled(true);
-      }
-    }
-  }, [visible, isEditMode, editTask?.id]);
-
-  const resetForm = useCallback(() => {
-    setTitle('');
-    setDescription('');
-    setSelectedDays([]);
-    setStartTime('09:00');
-    setEndTime('17:00');
-  }, []);
+  const {
+    title,
+    description,
+    selectedDays,
+    startTime,
+    endTime,
+    notificationsEnabled,
+    setTitle,
+    setDescription,
+    setStartTime,
+    setEndTime,
+    setNotificationsEnabled,
+    toggleDay,
+    formatTimeInput,
+    handleSubmit,
+  } = useTaskForm({
+    editTask,
+    isEditMode,
+    onSubmit: onCreateTask,
+    user,
+  });
 
   const handleClose = useCallback(() => {
     animateOut(() => {
       onClose();
     });
   }, [onClose, animateOut]);
-
-  const toggleDay = useCallback((dayKey: string) => {
-    setSelectedDays(prev => 
-      prev.includes(dayKey) 
-        ? prev.filter(d => d !== dayKey)
-        : [...prev, dayKey]
-    );
-  }, []);
-
-  const validateTime = (time: string): boolean => {
-    return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
-  };
-
-  const validateForm = (): boolean => {
-    if (!title.trim()) {
-      Alert.alert('Error', 'El título de la tarea es obligatorio');
-      return false;
-    }
-
-    if (selectedDays.length === 0) {
-      Alert.alert('Error', 'Debes seleccionar al menos un día');
-      return false;
-    }
-
-    if (!validateTime(startTime) || !validateTime(endTime)) {
-      Alert.alert('Error', 'Las horas deben tener formato HH:MM válido');
-      return false;
-    }
-
-    const [startH, startM] = startTime.split(':').map(Number);
-    const [endH, endM] = endTime.split(':').map(Number);
-    
-    if (startH * 60 + startM >= endH * 60 + endM) {
-      Alert.alert('Error', 'La hora de inicio debe ser anterior a la hora de fin');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleCreateTask = useCallback(() => {
-    if (!validateForm() || !user) return;
-
-    const taskData: TaskData = {
-      id: isEditMode && editTask ? editTask.id : Date.now().toString(),
-      title: title.trim(),
-      description: description.trim(),
-      days: selectedDays,
-      startTime: startTime,
-      endTime: endTime,
-      user: user.username,
-      status: isEditMode && editTask ? editTask.status : undefined,
-      notificationsEnabled,
-    };
-
-    onCreateTask(taskData);
-  }, [title, description, selectedDays, startTime, endTime, user, onCreateTask, isEditMode, editTask, validateForm, notificationsEnabled]);
-
-  const formatTimeInput = (text: string, setter: (value: string) => void) => {
-    let cleaned = text.replace(/[^\d:]/g, '');
-    
-    if (cleaned.length === 2 && !cleaned.includes(':')) {
-      cleaned += ':';
-    }
-    
-    if (cleaned.length > 5) {
-      cleaned = cleaned.substring(0, 5);
-    }
-
-    setter(cleaned);
-  };
 
   return (
     <Modal
@@ -182,150 +79,74 @@ const TaskModal: React.FC<TaskModalProps> = ({
       onRequestClose={handleClose}
       presentationStyle="overFullScreen"
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
+      <Animated.View
+        style={[
+          {
+            flex: 1,
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          },
+          getBackdropStyle(),
+        ]}
       >
         <Animated.View
           style={[
             {
-              flex: 1,
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              width: '100%',
+              maxHeight: '90%',
+              backgroundColor: theme.background,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 10,
+              paddingHorizontal: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 10,
             },
-            getBackdropStyle(),
+            getContentStyle(),
           ]}
         >
-          <Animated.View
-            style={[
-              {
-                width: '100%',
-                maxHeight: '90%',
-                backgroundColor: theme.background,
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                padding: 10,
-                paddingHorizontal: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: -4 },
-                shadowOpacity: 0.25,
-                shadowRadius: 8,
-                elevation: 10,
-              },
-              getContentStyle(),
-            ]}
+          <ModalHeader>
+            <ModalTitle>{isEditMode ? 'Editar Tarea' : 'Nueva Tarea'}</ModalTitle>
+            <CloseButton onPress={handleClose}>
+              <Ionicons name="close" size={24} color={theme.text} />
+            </CloseButton>
+          </ModalHeader>
+
+          <ScrollContainer 
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <ModalHeader>
-              <ModalTitle>{isEditMode ? 'Editar Tarea' : 'Nueva Tarea'}</ModalTitle>
-              <CloseButton onPress={handleClose}>
-                <Ionicons name="close" size={24} color={theme.text} />
-              </CloseButton>
-            </ModalHeader>
+            <TaskForm
+              title={title}
+              description={description}
+              selectedDays={selectedDays}
+              startTime={startTime}
+              endTime={endTime}
+              notificationsEnabled={notificationsEnabled}
+              onTitleChange={setTitle}
+              onDescriptionChange={setDescription}
+              onDayToggle={toggleDay}
+              onStartTimeChange={setStartTime}
+              onEndTimeChange={setEndTime}
+              onNotificationsToggle={setNotificationsEnabled}
+              formatTimeInput={formatTimeInput}
+            />
+          </ScrollContainer>
 
-            <ScrollContainer 
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              <FormSection>
-                <SectionTitle>Título</SectionTitle>
-                <Input
-                  placeholder="Nombre de la tarea"
-                  value={title}
-                  onChangeText={setTitle}
-                  maxLength={50}
-                />
-              </FormSection>
-
-              <FormSection>
-                <SectionTitle>Descripción</SectionTitle>
-                <Input
-                  placeholder="Descripción (opcional)"
-                  value={description}
-                  onChangeText={setDescription}
-                  multiline
-                  textAlignVertical="top"
-                  scrollEnabled={false}
-                  style={{ 
-                    minHeight: 80,
-                    height: Math.max(80, description.split('\n').length * 20 + 40)
-                  }}
-                  maxLength={200}
-                />
-              </FormSection>
-
-              <FormSection>
-                <SectionTitle>Días de la semana</SectionTitle>
-                <DaysContainer>
-                  {DAYS_OF_WEEK.map(day => (
-                    <DayButton
-                      key={day.key}
-                      isSelected={selectedDays.includes(day.key)}
-                      onPress={() => toggleDay(day.key)}
-                    >
-                      <DayText isSelected={selectedDays.includes(day.key)}>
-                        {day.label}
-                      </DayText>
-                    </DayButton>
-                  ))}
-                </DaysContainer>
-              </FormSection>
-
-              <FormSection>
-                <TimeContainer>
-                  <TimeSection>
-                    <SectionTitle>Hora de inicio</SectionTitle>
-                    <TimeInput
-                      value={startTime}
-                      onChangeText={(text) => formatTimeInput(text, setStartTime)}
-                      placeholder="09:00"
-                      placeholderTextColor="#999"
-                      keyboardType="numeric"
-                      maxLength={5}
-                    />
-                  </TimeSection>
-
-                  <TimeSection>
-                    <SectionTitle>Hora de fin</SectionTitle>
-                    <TimeInput
-                      value={endTime}
-                      onChangeText={(text) => formatTimeInput(text, setEndTime)}
-                      placeholder="17:00"
-                      placeholderTextColor="#999"
-                      keyboardType="numeric"
-                      maxLength={5}
-                    />
-                  </TimeSection>
-                </TimeContainer>
-              </FormSection>
-
-              <FormSection>
-                <SectionTitle>Configuración</SectionTitle>
-                <TimeContainer>
-                  <SectionTitle style={{ flex: 1, marginBottom: 0 }}>
-                    Notificaciones
-                  </SectionTitle>
-                  <Switch
-                    value={notificationsEnabled}
-                    onValueChange={setNotificationsEnabled}
-                    trackColor={{ false: theme.border, true: theme.primary }}
-                    thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
-                  />
-                </TimeContainer>
-              </FormSection>
-            </ScrollContainer>
-
-            <ButtonContainer>
-              <SmallButton>
-                <Button text="Cancelar" onPress={handleClose} />
-              </SmallButton>
-              <SmallButton>
-                <Button text={isEditMode ? 'Guardar' : 'Crear Tarea'} onPress={handleCreateTask} />
-              </SmallButton>
-            </ButtonContainer>
-          </Animated.View>
+          <ButtonContainer>
+            <SmallButton>
+              <Button text="Cancelar" onPress={handleClose} />
+            </SmallButton>
+            <SmallButton>
+              <Button text={isEditMode ? 'Guardar' : 'Crear Tarea'} onPress={handleSubmit} />
+            </SmallButton>
+          </ButtonContainer>
         </Animated.View>
-      </KeyboardAvoidingView>
+      </Animated.View>
     </Modal>
   );
 };
