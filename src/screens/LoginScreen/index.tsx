@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
-import { Container, Title, LinkText } from './styles';
+import { Container, LogoContainer, LogoText, Title, LinkText } from './styles';
 
 type RootStackParamList = {
   Home: undefined;
@@ -41,6 +41,10 @@ export default function LoginScreen() {
 
   return (
     <Container>
+      <LogoContainer>
+        <LogoText>TA</LogoText>
+      </LogoContainer>
+      
       <Title>Iniciar Sesión</Title>
       <Input placeholder="Usuario" value={username} onChangeText={setUsername} />
       <Input placeholder="Contraseña" value={password} onChangeText={setPassword} secureTextEntry />

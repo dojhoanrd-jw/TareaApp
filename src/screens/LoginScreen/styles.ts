@@ -20,3 +20,26 @@ export const LinkText = styled.Text`
   color: ${({ theme }) => theme.primary};
   text-align: center;
 `;
+
+export const LogoContainer = styled.View`
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  background-color: ${({ theme }) => theme.primary};
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 40px;
+  align-self: center;
+  shadow-color: ${({ theme }) => theme.primary};
+  shadow-offset: 0px 4px;
+  shadow-opacity: 0.3;
+  shadow-radius: 8px;
+  elevation: 8;
+`;
+
+export const LogoText = styled.Text`
+  color: #fff;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 1px;
+`;

@@ -5,7 +5,7 @@ import Button from '../../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Container, Title, LinkText } from './styles';
+import { Container, LogoContainer, LogoText, Title, LinkText } from './styles';
 
 type RootStackParamList = {
   Login: undefined;
@@ -42,6 +42,10 @@ export default function RegisterScreen() {
 
   return (
     <Container>
+      <LogoContainer>
+        <LogoText>TA</LogoText>
+      </LogoContainer>
+      
       <Title>Crear Cuenta</Title>
 
       <Input placeholder="Usuario" value={username} onChangeText={setUsername} />
