@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Modal, Animated } from 'react-native';
+import { Modal, Animated, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'styled-components/native';
 import { useAuth } from '../../context/AuthContext';
@@ -79,74 +79,83 @@ const TaskModal: React.FC<TaskModalProps> = ({
       onRequestClose={handleClose}
       presentationStyle="overFullScreen"
     >
-      <Animated.View
-        style={[
-          {
-            flex: 1,
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          },
-          getBackdropStyle(),
-        ]}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <Animated.View
           style={[
             {
-              width: '100%',
-              maxHeight: '90%',
-              backgroundColor: theme.background,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 10,
-              paddingHorizontal: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: 0.25,
-              shadowRadius: 8,
-              elevation: 10,
+              flex: 1,
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
             },
-            getContentStyle(),
+            getBackdropStyle(),
           ]}
         >
-          <ModalHeader>
-            <ModalTitle>{isEditMode ? 'Editar Tarea' : 'Nueva Tarea'}</ModalTitle>
-            <CloseButton onPress={handleClose}>
-              <Ionicons name="close" size={24} color={theme.text} />
-            </CloseButton>
-          </ModalHeader>
-
-          <ScrollContainer 
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+          <Animated.View
+            style={[
+              {
+                width: '100%',
+                maxHeight: '90%',
+                backgroundColor: theme.background,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                padding: 10,
+                paddingHorizontal: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 10,
+              },
+              getContentStyle(),
+            ]}
           >
-            <TaskForm
-              title={title}
-              description={description}
-              selectedDays={selectedDays}
-              startTime={startTime}
-              endTime={endTime}
-              notificationsEnabled={notificationsEnabled}
-              onTitleChange={setTitle}
-              onDescriptionChange={setDescription}
-              onDayToggle={toggleDay}
-              onStartTimeChange={setStartTime}
-              onEndTimeChange={setEndTime}
-              onNotificationsToggle={setNotificationsEnabled}
-              formatTimeInput={formatTimeInput}
-            />
-          </ScrollContainer>
+            <ModalHeader>
+              <ModalTitle>{isEditMode ? 'Editar Tarea' : 'Nueva Tarea'}</ModalTitle>
+              <CloseButton onPress={handleClose}>
+                <Ionicons name="close" size={24} color={theme.text} />
+              </CloseButton>
+            </ModalHeader>
 
-          <ButtonContainer>
-            <SmallButton>
-              <Button text="Cancelar" onPress={handleClose} />
-            </SmallButton>
-            <SmallButton>
-              <Button text={isEditMode ? 'Guardar' : 'Crear Tarea'} onPress={handleSubmit} />
-            </SmallButton>
-          </ButtonContainer>
+            <ScrollContainer 
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{
+                paddingBottom: 40,
+              }}
+            >
+              <TaskForm
+                title={title}
+                description={description}
+                selectedDays={selectedDays}
+                startTime={startTime}
+                endTime={endTime}
+                notificationsEnabled={notificationsEnabled}
+                onTitleChange={setTitle}
+                onDescriptionChange={setDescription}
+                onDayToggle={toggleDay}
+                onStartTimeChange={setStartTime}
+                onEndTimeChange={setEndTime}
+                onNotificationsToggle={setNotificationsEnabled}
+                formatTimeInput={formatTimeInput}
+              />
+            </ScrollContainer>
+
+            <ButtonContainer>
+              <SmallButton>
+                <Button text="Cancelar" onPress={handleClose} />
+              </SmallButton>
+              <SmallButton>
+                <Button text={isEditMode ? 'Guardar' : 'Crear Tarea'} onPress={handleSubmit} />
+              </SmallButton>
+            </ButtonContainer>
+          </Animated.View>
         </Animated.View>
-      </Animated.View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform, KeyboardAvoidingView } from 'react-native';
 import { TaskData } from '../../context/TaskContext';
 import Modal from '../Modal';
 import TaskDetails from './components/TaskDetails';
@@ -32,16 +33,21 @@ const TaskView: React.FC<TaskViewProps> = ({ visible, task, onClose, onEdit }) =
   );
 
   return (
-    <Modal
-      visible={visible}
-      title="Detalles de Tarea"
-      onClose={onClose}
-      footer={footer}
-      animationType="slide"
-      keyboardAvoidingView={false}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <TaskDetails task={task} />
-    </Modal>
+      <Modal
+        visible={visible}
+        title="Detalles de Tarea"
+        onClose={onClose}
+        footer={footer}
+        animationType="slide"
+        keyboardAvoidingView={false}
+      >
+        <TaskDetails task={task} />
+      </Modal>
+    </KeyboardAvoidingView>
   );
 };
 
