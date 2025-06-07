@@ -14,7 +14,6 @@ export const useHomeScreen = () => {
     updateTask, 
     updateTaskStatus, 
     deleteTask, 
-    reorderTasks,
     toggleTaskNotifications,
     isLoading 
   } = useTask();
@@ -25,7 +24,6 @@ export const useHomeScreen = () => {
   const [selectedTask, setSelectedTask] = useState<TaskData | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [selectedDay, setSelectedDay] = useState<DayFilter>('all');
-  const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
 
   const userTasks = user ? getUserTasks(user.username) : [];
 
@@ -170,16 +168,6 @@ export const useHomeScreen = () => {
     }
   };
 
-  const handleReorderTasks = (newTaskOrder: TaskData[]) => {
-    if (user) {
-      reorderTasks(user.username, newTaskOrder);
-    }
-  };
-
-  const toggleDragMode = () => {
-    setIsDragModeEnabled(!isDragModeEnabled);
-  };
-
   // Initialize notifications
   useEffect(() => {
     const setupNotifications = async () => {
@@ -218,7 +206,6 @@ export const useHomeScreen = () => {
     selectedTask,
     activeFilter,
     selectedDay,
-    isDragModeEnabled,
     isLoading,
     
     // Computed values
@@ -238,7 +225,5 @@ export const useHomeScreen = () => {
     handleCompleteTask,
     handleToggleTaskStatus,
     handleToggleNotifications,
-    handleReorderTasks,
-    toggleDragMode,
   };
 };

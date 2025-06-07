@@ -73,30 +73,3 @@ export const FABIcon = styled.Text`
   font-weight: bold;
   line-height: 24px;
 `;
-
-export const ReorderButton = styled.TouchableOpacity<{ isActive: boolean }>`
-  position: absolute;
-  bottom: 90px;
-  right: 20px;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background-color: ${({ theme, isActive }) => 
-    isActive ? theme.primary : theme.inputBackground};
-  justify-content: center;
-  align-items: center;
-  elevation: 6;
-  shadow-color: #000;
-  shadow-offset: 0px 3px;
-  shadow-opacity: 0.25;
-  shadow-radius: 5px;
-  border: 2px solid ${({ theme, isActive }) => 
-    isActive ? theme.primary : theme.border};
-`;
-
-export const ReorderText = styled.Text`
-  color: #FFFFFF;
-  font-size: 10px;
-  font-weight: bold;
-  margin-top: 2px;
-`;
