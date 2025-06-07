@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { AppError, ErrorType, errorHandler } from '../utils/ErrorHandler';
+import { NotificationValidationService, INotificationValidationService } from './NotificationValidationService';
 
 export interface INotificationSchedulerService {
   scheduleTaskNotifications(taskId: string, title: string, days: string[], startTime: string, endTime: string): Promise<void>;
@@ -9,24 +10,10 @@ export interface INotificationSchedulerService {
 }
 
 export class NotificationSchedulerService implements INotificationSchedulerService {
-  private async validateNotificationParams(taskId: string, title: string): Promise<void> {
-    if (!taskId || typeof taskId !== 'string' || taskId.trim() === '') {
-      throw new AppError(
-        'ID de tarea inválido para notificación',
-        ErrorType.VALIDATION,
-        'INVALID_TASK_ID',
-        { taskId }
-      );
-    }
+  private validationService: INotificationValidationService;
 
-    if (!title || typeof title !== 'string' || title.trim() === '') {
-      throw new AppError(
-        'Título de tarea inválido para notificación',
-        ErrorType.VALIDATION,
-        'INVALID_TASK_TITLE',
-        { title, taskId }
-      );
-    }
+  constructor() {
+    this.validationService = new NotificationValidationService();
   }
 
   async scheduleTaskNotifications(
@@ -37,12 +24,10 @@ export class NotificationSchedulerService implements INotificationSchedulerServi
     endTime: string
   ): Promise<void> {
     try {
-      await this.validateNotificationParams(taskId, title);
+      this.validationService.validateTaskParams(taskId, title);
 
-      // Cancel existing notifications for this task first
       await this.cancelTaskNotifications(taskId);
       
-      // Schedule a confirmation notification
       const notificationId = await Notifications.scheduleNotificationAsync({
         identifier: `${taskId}-scheduled`,
         content: {
@@ -83,14 +68,7 @@ export class NotificationSchedulerService implements INotificationSchedulerServi
 
   async cancelTaskNotifications(taskId: string): Promise<void> {
     try {
-      if (!taskId || typeof taskId !== 'string' || taskId.trim() === '') {
-        throw new AppError(
-          'ID de tarea inválido para cancelar notificaciones',
-          ErrorType.VALIDATION,
-          'INVALID_TASK_ID_CANCEL',
-          { taskId }
-        );
-      }
+      this.validationService.validateTaskId(taskId);
 
       const scheduledNotifications = await this.getScheduledNotifications();
       const taskNotifications = scheduledNotifications.filter(
@@ -157,8 +135,6 @@ export class NotificationSchedulerService implements INotificationSchedulerServi
       );
       
       errorHandler.logError(appError);
-      
-      // Return empty array instead of throwing, as this is often used for cleanup
       return [];
     }
   }

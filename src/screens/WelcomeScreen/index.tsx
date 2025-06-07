@@ -60,15 +60,12 @@ export default function WelcomeScreen() {
   const buttonsSlideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
-    // Secuencia de animaciones al cargar la pantalla
     Animated.sequence([
-      // Logo aparece con escala
       Animated.timing(logoScaleAnim, {
         toValue: 1,
         duration: 600,
         useNativeDriver: true,
       }),
-      // Contenido principal aparece
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -81,7 +78,6 @@ export default function WelcomeScreen() {
           useNativeDriver: true,
         }),
       ]),
-      // Botones aparecen desde abajo
       Animated.timing(buttonsSlideAnim, {
         toValue: 0,
         duration: 600,

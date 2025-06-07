@@ -36,39 +36,29 @@ export class AppError extends Error {
   }
 }
 
-export class ErrorHandler {
-  private static instance: ErrorHandler;
-  private errors: AppError[] = [];
-
-  static getInstance(): ErrorHandler {
-    if (!ErrorHandler.instance) {
-      ErrorHandler.instance = new ErrorHandler();
-    }
-    return ErrorHandler.instance;
-  }
-
-  logError(error: AppError | Error): void {
-    const appError = error instanceof AppError ? error : this.convertToAppError(error);
-    
-    this.errors.push(appError);
-    
+// Service for logging errors
+class ErrorLogger {
+  logError(error: AppError): void {
     // Log to console in development
     if (__DEV__) {
       console.error('Error logged:', {
-        message: appError.message,
-        type: appError.type,
-        code: appError.code,
-        details: appError.details,
-        stack: appError.stack,
-        timestamp: appError.timestamp
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        details: error.details,
+        stack: error.stack,
+        timestamp: error.timestamp
       });
     }
 
     // Here you could send to crash reporting service like Crashlytics, Sentry, etc.
-    // this.sendToCrashReporting(appError);
+    // this.sendToCrashReporting(error);
   }
+}
 
-  private convertToAppError(error: Error): AppError {
+// Service for converting generic errors to AppErrors
+class ErrorConverter {
+  convertToAppError(error: Error): AppError {
     return new AppError(
       error.message || 'Error desconocido',
       ErrorType.UNKNOWN,
@@ -76,18 +66,28 @@ export class ErrorHandler {
       { originalError: error.name }
     );
   }
+}
 
-  handleError(error: AppError | Error, showAlert: boolean = true): void {
-    const appError = error instanceof AppError ? error : this.convertToAppError(error);
-    
-    this.logError(appError);
+// Service for storing errors
+class ErrorStorage {
+  private errors: AppError[] = [];
 
-    if (showAlert) {
-      this.showErrorAlert(appError);
-    }
+  storeError(error: AppError): void {
+    this.errors.push(error);
   }
 
-  private showErrorAlert(error: AppError): void {
+  getRecentErrors(limit: number = 10): AppError[] {
+    return this.errors.slice(-limit);
+  }
+
+  clearErrors(): void {
+    this.errors = [];
+  }
+}
+
+// Service for showing error alerts
+class ErrorAlertService {
+  showErrorAlert(error: AppError): void {
     const title = this.getErrorTitle(error.type);
     const message = this.getUserFriendlyMessage(error);
 
@@ -130,13 +130,53 @@ export class ErrorHandler {
         return error.message || 'Ha ocurrido un error inesperado.';
     }
   }
+}
+
+// Main ErrorHandler - orchestrates other services
+export class ErrorHandler {
+  private static instance: ErrorHandler;
+  private logger: ErrorLogger;
+  private converter: ErrorConverter;
+  private storage: ErrorStorage;
+  private alertService: ErrorAlertService;
+
+  private constructor() {
+    this.logger = new ErrorLogger();
+    this.converter = new ErrorConverter();
+    this.storage = new ErrorStorage();
+    this.alertService = new ErrorAlertService();
+  }
+
+  static getInstance(): ErrorHandler {
+    if (!ErrorHandler.instance) {
+      ErrorHandler.instance = new ErrorHandler();
+    }
+    return ErrorHandler.instance;
+  }
+
+  logError(error: AppError | Error): void {
+    const appError = error instanceof AppError ? error : this.converter.convertToAppError(error);
+    
+    this.storage.storeError(appError);
+    this.logger.logError(appError);
+  }
+
+  handleError(error: AppError | Error, showAlert: boolean = true): void {
+    const appError = error instanceof AppError ? error : this.converter.convertToAppError(error);
+    
+    this.logError(appError);
+
+    if (showAlert) {
+      this.alertService.showErrorAlert(appError);
+    }
+  }
 
   getRecentErrors(limit: number = 10): AppError[] {
-    return this.errors.slice(-limit);
+    return this.storage.getRecentErrors(limit);
   }
 
   clearErrors(): void {
-    this.errors = [];
+    this.storage.clearErrors();
   }
 }
 
